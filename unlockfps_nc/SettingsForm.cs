@@ -18,51 +18,52 @@ namespace unlockfps_nc
         private readonly ConfigService _configService;
         private readonly Config _config;
 
-        public SettingsForm(ConfigService configService)
+        public SettingsForm ( ConfigService configService )
         {
-            InitializeComponent();
+            InitializeComponent ( );
             _configService = configService;
             _config = _configService.Config;
 
-            SetupBindings();
+            SetupBindings ( );
         }
 
-        private void SetupBindings()
+        private void SetupBindings ( )
         {
             // General
-            CBStartMinimized.DataBindings.Add("Checked", _config, "StartMinimized", true, DataSourceUpdateMode.OnPropertyChanged);
-            CBAutoClose.DataBindings.Add("Checked", _config, "AutoClose", true, DataSourceUpdateMode.OnPropertyChanged);
-            CBPowerSave.DataBindings.Add("Checked", _config, "UsePowerSave", true, DataSourceUpdateMode.OnPropertyChanged);
-            ComboPriority.DataBindings.Add("SelectedIndex", _config, "Priority", true, DataSourceUpdateMode.OnPropertyChanged);
-            
+            CBStartMinimized.DataBindings.Add ( "Checked", _config, "StartMinimized", true, DataSourceUpdateMode.OnPropertyChanged );
+            CBAutoClose.DataBindings.Add ( "Checked", _config, "AutoClose", true, DataSourceUpdateMode.OnPropertyChanged );
+            CBPowerSave.DataBindings.Add ( "Checked", _config, "UsePowerSave", true, DataSourceUpdateMode.OnPropertyChanged );
+            ComboPriority.DataBindings.Add ( "SelectedIndex", _config, "Priority", true, DataSourceUpdateMode.OnPropertyChanged );
+
             // Launch Options
-            CBPopup.DataBindings.Add("Checked", _config, "PopupWindow", true, DataSourceUpdateMode.OnPropertyChanged);
-            CBFullscreen.DataBindings.Add("Checked", _config, "Fullscreen", true, DataSourceUpdateMode.OnPropertyChanged);
-            CBCustomRes.DataBindings.Add("Checked", _config, "UseCustomRes", true, DataSourceUpdateMode.OnPropertyChanged);
-            CBUseMobileUI.DataBindings.Add("Checked", _config, "UseMobileUI", true, DataSourceUpdateMode.OnPropertyChanged);
-            InputResX.DataBindings.Add("Value", _config, "CustomResX", true, DataSourceUpdateMode.OnPropertyChanged);
-            InputResY.DataBindings.Add("Value", _config, "CustomResY", true, DataSourceUpdateMode.OnPropertyChanged);
-            ComboFullscreenMode.DataBindings.Add("SelectedIndex", _config, "IsExclusiveFullscreen", true, DataSourceUpdateMode.OnPropertyChanged);
-            InputMonitorNum.DataBindings.Add("Value", _config, "MonitorNum", true, DataSourceUpdateMode.OnPropertyChanged);
+            CBPopup.DataBindings.Add ( "Checked", _config, "PopupWindow", true, DataSourceUpdateMode.OnPropertyChanged );
+            CBFullscreen.DataBindings.Add ( "Checked", _config, "Fullscreen", true, DataSourceUpdateMode.OnPropertyChanged );
+            CBCustomRes.DataBindings.Add ( "Checked", _config, "UseCustomRes", true, DataSourceUpdateMode.OnPropertyChanged );
+            CBUseMobileUI.DataBindings.Add ( "Checked", _config, "UseMobileUI", true, DataSourceUpdateMode.OnPropertyChanged );
+            InputResX.DataBindings.Add ( "Value", _config, "CustomResX", true, DataSourceUpdateMode.OnPropertyChanged );
+            InputResY.DataBindings.Add ( "Value", _config, "CustomResY", true, DataSourceUpdateMode.OnPropertyChanged );
+            ComboFullscreenMode.DataBindings.Add ( "SelectedIndex", _config, "IsExclusiveFullscreen", true, DataSourceUpdateMode.OnPropertyChanged );
+            InputMonitorNum.DataBindings.Add ( "Value", _config, "MonitorNum", true, DataSourceUpdateMode.OnPropertyChanged );
 
             // DLLs            
-            RefreshDllList();
-            CBSuspendLoad.DataBindings.Add("Checked", _config, "SuspendLoad", true, DataSourceUpdateMode.OnPropertyChanged);
+            RefreshDllList ( );
+            CBSuspendLoad.DataBindings.Add ( "Checked", _config, "SuspendLoad", true, DataSourceUpdateMode.OnPropertyChanged );
+            CBFallback.DataBindings.Add ( "Checked", _config, "UseGShadeFallback", true, DataSourceUpdateMode.OnPropertyChanged );
         }
 
-        private void RefreshDllList()
+        private void RefreshDllList ( )
         {
             _config.DllList = _config.DllList
-                .Where(VerifyDll)
-                .ToList();
+                .Where ( VerifyDll )
+                .ToList ( );
 
-            ListBoxDlls.Items.Clear();
-            ListBoxDlls.Items.AddRange(_config.DllList.ToArray());
+            ListBoxDlls.Items.Clear ( );
+            ListBoxDlls.Items.AddRange ( _config.DllList.ToArray ( ) );
         }
 
-        private void UpdateControlState()
+        private void UpdateControlState ( )
         {
-            if (_config.PopupWindow) // they can't coexist (?) so disable the other
+            if ( _config.PopupWindow ) // they can't coexist (?) so disable the other
                 _config.Fullscreen = false;
 
             CBPopup.Enabled = !_config.Fullscreen;
@@ -70,77 +71,84 @@ namespace unlockfps_nc
             InputResX.Enabled = _config.UseCustomRes;
             InputResY.Enabled = _config.UseCustomRes;
             ComboFullscreenMode.Enabled = _config is { Fullscreen: true, PopupWindow: false };
+           
         }
 
-        public void LaunchOptionsChanged(object sender, EventArgs e)
+        public void LaunchOptionsChanged ( object sender, EventArgs e )
         {
-            UpdateControlState();
+            UpdateControlState ( );
         }
 
-        private void SettingsForm_Load(object sender, EventArgs e)
+        private void SettingsForm_Load ( object sender, EventArgs e )
         {
-            UpdateControlState();
+            UpdateControlState ( );
         }
 
-        private void SettingsForm_FormClosing(object sender, FormClosingEventArgs e)
+        private void SettingsForm_FormClosing ( object sender, FormClosingEventArgs e )
         {
-            _configService.Save();
+            _configService.Save ( );
         }
 
-        private void BtnAddDll_Click(object sender, EventArgs e)
+        private void BtnAddDll_Click ( object sender, EventArgs e )
         {
-            if (DllAddDialog.ShowDialog() != DialogResult.OK)
+            if ( DllAddDialog.ShowDialog ( ) != DialogResult.OK )
                 return;
-            
-            var selectedFiles = DllAddDialog.FileNames.ToList();
-            selectedFiles = selectedFiles
-                .Where(x => VerifyDll(x) || MessageBox.Show(
-                    $@"Invalid File: {Environment.NewLine}{x}{Environment.NewLine}{Environment.NewLine}Only native x64 dlls are supported",
-                    @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error) != DialogResult.OK)
-                .Where(x => !_config.DllList.Contains(x))
-                .ToList();
 
-            _config.DllList.AddRange(selectedFiles);
-            RefreshDllList();
+            var selectedFiles = DllAddDialog.FileNames.ToList ( );
+            selectedFiles = selectedFiles
+                .Where ( x => VerifyDll ( x ) || MessageBox.Show (
+                    $@"Invalid File: {Environment.NewLine}{x}{Environment.NewLine}{Environment.NewLine}Only native x64 dlls are supported",
+                    @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error ) != DialogResult.OK )
+                .Where ( x => !_config.DllList.Contains ( x ) )
+                .ToList ( );
+
+            _config.DllList.AddRange ( selectedFiles );
+            RefreshDllList ( );
         }
 
-        private bool VerifyDll(string fullPath)
+        private bool VerifyDll ( string fullPath )
         {
-            if (!File.Exists(fullPath))
+            if ( !File.Exists ( fullPath ) )
                 return false;
 
-            using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-            using var peReader = new PEReader(fs);
+            using var fs = new FileStream ( fullPath, FileMode.Open, FileAccess.Read );
+            using var peReader = new PEReader ( fs );
 
-            if (peReader.HasMetadata)
+            if ( peReader.HasMetadata )
                 return false;
 
             return peReader.PEHeaders.CoffHeader.Machine == Machine.Amd64;
         }
 
-        private void ListBoxDlls_Format(object sender, ListControlConvertEventArgs e)
+        private void ListBoxDlls_Format ( object sender, ListControlConvertEventArgs e )
         {
-            e.Value = Path.GetFileName(e.Value as string);
+            e.Value = Path.GetFileName ( e.Value as string );
         }
 
-        private void ListBoxDlls_MouseMove(object sender, MouseEventArgs e)
+        private void ListBoxDlls_MouseMove ( object sender, MouseEventArgs e )
         {
-            var index = ListBoxDlls.IndexFromPoint(e.Location);
-            if (index == -1)
+            var index = ListBoxDlls.IndexFromPoint ( e.Location );
+            if ( index == -1 )
                 return;
 
-            var toolTipText = _config.DllList[index];
-            ToolTipSettings.SetToolTip(ListBoxDlls, toolTipText);
+            var toolTipText = _config.DllList [ index ];
+            ToolTipSettings.SetToolTip ( ListBoxDlls, toolTipText );
         }
 
-        private void BtnRemoveDll_Click(object sender, EventArgs e)
+        private void BtnRemoveDll_Click ( object sender, EventArgs e )
         {
             var selectedIndex = ListBoxDlls.SelectedIndex;
-            if (selectedIndex == -1)
+            if ( selectedIndex == -1 )
                 return;
-            
-            _config.DllList.RemoveAt(selectedIndex);
-            RefreshDllList();
+
+            _config.DllList.RemoveAt ( selectedIndex );
+            RefreshDllList ( );
         }
+
+        private void ListBoxDlls_SelectedIndexChanged ( object sender, EventArgs e )
+        {
+
+        }
+
     }
 }

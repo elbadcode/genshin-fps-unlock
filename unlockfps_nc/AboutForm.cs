@@ -13,22 +13,22 @@ namespace unlockfps_nc
 {
     public partial class AboutForm : Form
     {
-        public AboutForm()
+        public AboutForm ( )
         {
-            InitializeComponent();
+            InitializeComponent ( );
         }
 
-        private void LinkLabelSource_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void LinkLabelSource_LinkClicked ( object sender, LinkLabelLinkClickedEventArgs e )
         {
-            OpenLink("https://github.com/34736384/genshin-fps-unlock");
+            OpenLink ( "https://github.com/elbadcode/OpenGenshin" );
         }
 
-        private void LinkLabelIssues_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void LinkLabelIssues_LinkClicked ( object sender, LinkLabelLinkClickedEventArgs e )
         {
-            OpenLink("https://github.com/34736384/genshin-fps-unlock/issues");
+            OpenLink ( "https://github.com/34736384/genshin-fps-unlock" );
         }
 
-        private void OpenLink(string url)
+        private void OpenLink ( string url )
         {
             var psi = new ProcessStartInfo
             {
@@ -36,8 +36,22 @@ namespace unlockfps_nc
                 UseShellExecute = true
             };
 
-            Process.Start(psi);
+            Process.Start ( psi );
         }
 
+        private void LabelTitle_Click ( object sender, EventArgs e )
+        {
+
+        }
+
+        private void label1_Click ( object sender, EventArgs e )
+        {
+
+        }
+
+        private void label2_Click ( object sender, EventArgs e )
+        {
+
+        }
     }
 }

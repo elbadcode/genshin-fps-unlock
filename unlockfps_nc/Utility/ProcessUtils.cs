@@ -5,6 +5,7 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using unlockfps_nc.Service;
 
 namespace unlockfps_nc.Utility
 {
@@ -40,13 +41,17 @@ namespace unlockfps_nc.Utility
             var kernel32 = Native.LoadLibrary("kernel32.dll");
             var loadLibrary = Native.GetProcAddress(kernel32, "LoadLibraryW");
 
-            var remoteVa = Native.VirtualAllocEx(processHandle, IntPtr.Zero, 0x1000,
-                AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.READWRITE);
-            if (remoteVa == IntPtr.Zero)
+            var remoteVa = Native.VirtualAllocEx ( processHandle, IntPtr.Zero, 0x1000,
+       AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.READWRITE );
+            if ( remoteVa == IntPtr.Zero )
                 return false;
-
             foreach (var dllPath in dllPaths)
             {
+
+
+   
+
+
                 var nativeString = Marshal.StringToHGlobalUni(dllPath);
                 var bytes = Encoding.Unicode.GetBytes(dllPath);
                 Marshal.FreeHGlobal(nativeString);
@@ -61,12 +66,51 @@ namespace unlockfps_nc.Utility
                 Native.WaitForSingleObject(thread, uint.MaxValue);
                 Native.CloseHandle(thread);
                 Native.WriteProcessMemory(processHandle, remoteVa, new byte[bytes.Length], bytes.Length, out _);
+
+
+
             }
 
-            Native.VirtualFreeEx(processHandle, remoteVa, 0, FreeType.RELEASE);
+
+            Native.VirtualFreeEx ( processHandle, remoteVa, 0, FreeType.RELEASE );
+            return true;
+        }
+
+
+        //Allow overload with single DLL instead of needing to load from the list
+        public static bool InjectDlls ( IntPtr processHandle, String dllPath )
+        {
+            
+            Native.RtlAdjustPrivilege ( 20, true, false, out var _ );
+
+            var kernel32 = Native.LoadLibrary ( "kernel32.dll" );
+            var loadLibrary = Native.GetProcAddress ( kernel32, "LoadLibraryW" );
+            var remoteVa = Native.VirtualAllocEx ( processHandle, nint.Zero, 0x1000,
+                AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.READWRITE );
+            if ( remoteVa == IntPtr.Zero )
+                return false;
+
+                var nativeString = Marshal.StringToHGlobalUni ( dllPath );
+                var bytes = Encoding.Unicode.GetBytes ( dllPath );
+                Marshal.FreeHGlobal ( nativeString );
+
+                if ( !Native.WriteProcessMemory ( processHandle, remoteVa, bytes, bytes.Length, out var bytesWritten ) )
+                    return false;
+
+                var thread = Native.CreateRemoteThread ( processHandle, IntPtr.Zero, 0, loadLibrary, remoteVa, 0, out var threadId );
+                if ( thread == IntPtr.Zero )
+                    return false;
+
+                Native.WaitForSingleObject ( thread, uint.MaxValue );
+                Native.CloseHandle ( thread );
+                Native.WriteProcessMemory ( processHandle, remoteVa, new byte [ bytes.Length ], bytes.Length, out _ );         
+
+            Native.VirtualFreeEx ( processHandle, remoteVa, 0, FreeType.RELEASE );
 
             return true;
         }
+
+
 
         public static unsafe IntPtr PatternScan(IntPtr module, string signature)
         {
